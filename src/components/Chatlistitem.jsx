@@ -16,25 +16,27 @@ const Chatlistitem = ({contact, isActive, onClick}) => {
               {/*The div holding two divs for the Name and the last message */}
       
               
-              <div className='flex flex-col flex-1 ml-4 gap-2'>
+              <div className='flex flex-col flex-1 ml-4 gap-2 min-w-0'>
                 {/* The div for holding the contact name */}
-                <div className='leading-tight truncate'>
-                  <h1 style={{color:'var(--text-primary)'}}>{contact.name}</h1>
+                <div className='leading-tight'>
+                  <h1 className='truncate' style={{color:'var(--text-primary)'}}>{contact.name}</h1>
                 </div>
                 {/* The div for holding the last chat */}
-                <div className='leading-tight truncate'>
-                  <p className='text-xs' style={{color:'var(--text-secondary)'}}>
+                <div className='leading-tight'>
+                  <p className='text-xs truncate' style={{color:'var(--text-secondary)'}}>
                     {contact.lastMessage}</p>
                 </div>
 
               </div>
               {/* The div to include both the unread messages count and final message time */}
-              <div className='flex flex-col items-center leading-tight text-xs truncate gap-2'>
+              <div className='flex flex-col items-center leading-tight text-xs shrink-0 gap-2'>
                 <p style={{color:'var(--text-secondary)'}}>{contact.time}</p>
+                {contact.unread>0 &&(
                 <div className='text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center'
                 style={{backgroundColor:'var(--bubble-sent)', color:'var(--accent-text)'}}>
-                      2
+                      {contact.unread}
                 </div>
+                )}
               </div>
             </div>
 

@@ -10,7 +10,11 @@ const Chatarea = ({ view, setView, activeContact, messages, onSendMessage, }) =>
         onSendMessage(inputText);
         setInputText('');
     }
-
+const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+        handleSend();
+    }
+};
     const bottomRef = useRef(null);
     useEffect(()=>{
         bottomRef.current?.scrollIntoView({behavior:'smooth'});
@@ -59,6 +63,7 @@ const Chatarea = ({ view, setView, activeContact, messages, onSendMessage, }) =>
                         placeholder="Message..." 
                         className='bg-transparent flex-1 outline-none'
                         style={{color:'var(--text-primary)'}}
+                        onKeyDown={handleKeyDown}
                     />
                     <Send size={19} className='cursor-pointer'
                     style={{color:'var(--text-primary)'}}
