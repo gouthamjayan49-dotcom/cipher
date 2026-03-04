@@ -124,7 +124,7 @@ const App = ()=>{
 
   return(
     <div className='flex h-screen w-screen text-white bg-slate-950 overflow-hidden'>
-      <Navigationrail />
+      <Navigationrail setSidebarView={setSidebarView} />
 
       
       <Sidebar isSidebarOpen={isSidebarOpen}

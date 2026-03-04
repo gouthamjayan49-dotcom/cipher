@@ -1,6 +1,6 @@
 import React from 'react';
 import { MessageSquare,Settings,CircleUser} from 'lucide-react';
-const Navigationrail=()=>{
+const Navigationrail=({setSidebarView})=>{
     return(
        <aside className='flex flex-col h-screen w-16 border-r justify-between overflow-hidden'
        style={{backgroundColor:'var(--bg-app)', borderColor:'var(--border-ui)'}}>
@@ -18,8 +18,9 @@ const Navigationrail=()=>{
         style={{color:'var(--text-primary)'}}>
             <Settings size={24} />
         </div>
-        <div className='text-slate-600 hover:text-red-500 cursor-pointer transition-colors'>
-            <CircleUser size={24} />
+        <div className='text-slate-600 hover:text-red-500 cursor-pointer transition-colors' 
+        onClick={()=> setSidebarView('profile')}>
+            <CircleUser size={24}  />
         </div>
     </div>
 </aside>

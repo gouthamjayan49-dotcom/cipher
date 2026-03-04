@@ -1,10 +1,14 @@
 import React,{useState} from 'react';
-import {SquarePen,ArrowLeft,Search,UserPlus,User,Check,ChevronDown,Phone} from 'lucide-react';
+import {SquarePen,ArrowLeft,Search,UserPlus,User,Check,ChevronDown,Phone,LogOut,Pen} from 'lucide-react';
 import Chatlistitem from './Chatlistitem';
 import Contactslist from './Contactslist';
 import NewContact from './NewContact';
+import { use } from 'react';
 
-const Sidebar = ({isSidebarOpen,sidebarView, setSidebarView,contacts,activeContact,onSelectContact,onAddContact})=>{
+const Sidebar = ({isSidebarOpen,sidebarView, setSidebarView,contacts,activeContact,onSelectContact,
+  onAddContact})=>{
+    const[about,setAbout]=useState('');
+    const [editingUsername, setEditingUsername] = useState(false);
     return(
         <aside
        className={`border-r transition-all duration-300 overflow-hidden flex flex-col
@@ -121,6 +125,77 @@ style={{
         <NewContact onAddContact={onAddContact} contacts={contacts} />
       </>
 )}
+
+      {sidebarView === 'profile'&& (
+        <>
+        <header className='h-16 border-b flex flex-row px-6 items-center gap-4 shrink-0'
+        style={{ backgroundColor: 'var(--bg-app)', borderColor: 'var(--border-ui)' }}>
+            <button className='hover:opacity-70 p-2 rounded-full transition-colors'
+            onClick={() => setSidebarView('list')}>
+                <ArrowLeft size={22} style={{ color: 'var(--text-primary)' }} />
+            </button>
+            <h1 className='text-lg font-semibold' style={{ color: 'var(--text-primary)' }}>
+                Edit Profile
+            </h1>
+        </header>
+        <div className='flex flex-col flex-1 p-6 gap-6 overflow-y-auto'>
+
+          {/* Avatar */}
+          <div className='flex justify-center py-4'>
+            <div className='w-24 h-24 rounded-full flex items-center justify-center cursor-pointer hover:opacity-70'
+              style={{ backgroundColor: 'var(--bg-item-active)' }}>
+              <span className='text-2xl font-semibold' style={{ color: 'var(--text-primary)' }}>
+                U
+              </span>
+            </div>
+          </div>
+
+          {/* Username */}
+          <div className='flex flex-col gap-1 border-b pb-4' style={{ borderColor: 'var(--border-ui)' }}>
+  <p className='text-xs' style={{ color: 'var(--text-secondary)' }}>Username</p>
+  <div className='flex items-center justify-between'>
+
+    {editingUsername 
+      ? <input autoFocus className='outline-none bg-transparent text-sm' style={{ color: 'var(--text-primary)' }} />
+      : <p className='text-sm' style={{ color: 'var(--text-primary)' }}>@username</p>
+    }
+    <Pen size={14} style={{ color: 'var(--text-secondary)' }} onClick={()=>setEditingUsername(true)} />
+  </div>
+</div>
+
+          {/* About */}
+          <div className='flex flex-col gap-1 border-b pb-4' style={{ borderColor: 'var(--border-ui)' }}>
+  <p className='text-xs' style={{ color: 'var(--text-secondary)' }}>About</p>
+  <div className='flex items-center gap-2'>
+    <input
+      type='text'
+      placeholder='Write something about yourself...'
+      value={about}
+      onChange={e => setAbout(e.target.value)}
+      className='outline-none bg-transparent text-sm flex-1'
+      style={{ color: 'var(--text-primary)' }}
+    />
+    <Check size={16} className='cursor-pointer hover:opacity-70' 
+      style={{ color: 'var(--text-secondary)' }} />
+  </div>
+</div>
+
+          {/* Logout */}
+          <div className='mt-auto'>
+            <button className='w-full flex items-center gap-3 p-4 rounded-2xl hover:opacity-70 transition-opacity'
+              style={{ color: '#FF3B30' }}>
+              <LogOut size={18} />
+              <span className='text-sm font-medium'>Log Out</span>
+            </button>
+          </div>
+          
+
+        </div>
+        
+        </>
+      )}
+
+
       </aside>
     );
 };
