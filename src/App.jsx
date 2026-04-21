@@ -1,6 +1,6 @@
 
 import {Menu,X,Search,Phone,Video,MoreVertical,Send,Paperclip,SquarePen} from 'lucide-react';
-import {useState,useEffect} from 'react'
+import {useState,useEffect,useRef} from 'react'
 import Sidebar from './components/Sidebar';//new line
 import Header from './components/Header';
 import Chatarea from './components/Chatarea';
@@ -8,106 +8,140 @@ import Navigationrail from './components/Navigationrail';
 import AuthScreen from './components/Authscreen';
 
 
-
-
-
-const initialContacts = [
-  { id: 1, name: 'Govardhan Gopu', username: '@govardhan', about: 'Hey there, I am using Cipher Net.', lastMessage: 'See you tomorrow', time: '12:34 PM', unread: 2 },
-  { id: 2, name: 'Bob Martinez', username: '@bobm', about: 'Available', lastMessage: 'Haha okay 😂', time: '11:10 AM', unread: 0 },
-  { id: 3, name: 'Carol White', username: '@carolw', about: 'Busy – do not disturb', lastMessage: 'Can we reschedule?', time: 'Yesterday', unread: 1 },
-  { id: 4, name: 'David Lee', username: '@davidlee', about: 'Living life one day at a time', lastMessage: 'Sounds good!', time: 'Yesterday', unread: 0 },
-  { id: 5, name: 'Eva Brown', username: '@evab', about: 'Coffee addict ☕', lastMessage: 'I will send the file now', time: 'Monday', unread: 3 },
-  { id: 6, name: 'Frank Ocean', username: '@frankocean', about: 'Music is life 🎵', lastMessage: 'Nice!', time: 'Sunday', unread: 0 },
-  { id: 7, name: 'Grace Kim', username: '@gracekim', about: '안녕하세요!', lastMessage: 'Did you get my message?', time: 'Saturday', unread: 1 },
-  { id: 8, name: 'Arjun Sharma', username: '@arjuns', about: 'Living in the moment 🌅', lastMessage: 'Let me check and get back', time: 'Friday', unread: 0 },
-{ id: 9, name: 'Zara Ahmed', username: '@zaraah', about: 'Designer by day 🎨', lastMessage: 'Sent you the files!', time: 'Friday', unread: 2 },
-{ id: 10, name: 'Liam Chen', username: '@liamchen', about: 'Code. Sleep. Repeat.', lastMessage: 'That makes sense', time: 'Thursday', unread: 0 },
-{ id: 11, name: 'Sofia Rossi', username: '@sofiar', about: 'Exploring the world 🌍', lastMessage: 'When are you free?', time: 'Thursday', unread: 1 },
-{ id: 12, name: 'Marcus Webb', username: '@marcusw', about: 'Gym rat 💪', lastMessage: 'Absolutely bro', time: 'Wednesday', unread: 0 },
-]
-
-
-// Each conversation is stored by contact id.
-// Each message has: id, text, fromMe (true = sent by user), time, status ('sent'|'delivered'|'read')
-const initialConversations = {
-  1: [
-    { id: 1, text: 'Hey Gopu! Are we still on for tomorrow?', fromMe: true,  time: '12:30 PM', status: 'read' },
-    { id: 2, text: 'Yes of course! Looking forward to it 😊',   fromMe: false, time: '12:32 PM', status: 'read' },
-    { id: 3, text: 'See you tomorrow!',                          fromMe: false, time: '12:34 PM', status: 'read' },
-  ],
-  2: [
-    { id: 1, text: 'Bob did you watch the game?',   fromMe: true,  time: '11:05 AM', status: 'read' },
-    { id: 2, text: 'Yes bro it was insane!!!',       fromMe: false, time: '11:08 AM', status: 'read' },
-    { id: 3, text: 'Haha okay 😂',                   fromMe: false, time: '11:10 AM', status: 'read' },
-  ],
-  3: [],
-  4: [],
-  5: [],
-  6: [],
-  7: [],
-};
-
-
-
-
 const App = ()=>{
 
+  const[view,setView]=useState('chat');
+  const [sidebarView, setSidebarView] = useState('list');
+
+  const [contacts,setContacts]=useState([]);
+  // activeContact: whichever contact is currently open in the chat area (or null)
+  const [activeContact, setActiveContact] = useState(null);
+  
+  // conversations: all messages, keyed by contact id
+  const [conversations, setConversations] = useState({});
+
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const[isSidebarOpen,setIsSidebarOpen]=useState(true);
   const[theme, setTheme] = useState('dark')
+
+  const wsRef = useRef(null);
+
+  
   useEffect(()=>{
   document.documentElement.setAttribute('data-theme', theme)
   }, [theme])
 
 
-
-  const[view,setView]=useState('chat');
-  const [sidebarView, setSidebarView] = useState('list');
-
-  const [contacts,setContacts]=useState(initialContacts);
-  // activeContact: whichever contact is currently open in the chat area (or null)
-  const [activeContact, setActiveContact] = useState(null);
+  useEffect(() => {
+  if (!isLoggedIn) return;
   
-  // conversations: all messages, keyed by contact id
-  const [conversations, setConversations] = useState(initialConversations);
+  const token = localStorage.getItem('token');
+  fetch('http://localhost:8000/messages/conversations', {
+    headers: { 'Authorization': `Bearer ${token}` }
+  })
+  .then(res => res.json())
+  .then(data => {
+    const realContacts = data.map(c => {
+      const myUsername = localStorage.getItem('username');
+      const otherUsername = c.participant_1 === myUsername 
+        ? c.participant_2 
+        : c.participant_1;
+      return {
+        id: c.id,
+        conversationId: c.id,
+        name: otherUsername,
+        username: otherUsername,
+        lastMessage: c.last_message || '',
+        time: c.last_message_at ? new Date(c.last_message_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '',
+        unread: c.unread_count || 0,
+        about: ''
+      };
+    });
+    setContacts(realContacts);
+  });
+}, [isLoggedIn]);
 
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  useEffect(() => {
+  if (!isLoggedIn) return;
+  const token = localStorage.getItem('token');
+  const ws = new WebSocket(`ws://localhost:8000/ws?token=${token}`);
 
-  const handleSelectedContact = (contact)=>{
-  setActiveContact(contact);
+  ws.onmessage = (e) => {
+    const data = JSON.parse(e.data);
+
+    if (data.type === 'message') {
+      const myUsername = localStorage.getItem('username');
+      const newMsg = {
+        id: data.message_id,
+        text: data.content,
+        fromMe: data.sender_username === myUsername,
+        time: new Date(data.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        status: data.status
+      };
+
+      setConversations(prev => ({
+        ...prev,
+        [data.conversation_id]: [...(prev[data.conversation_id] || []), newMsg]
+      }));
+
+      setContacts(prev => {
+        const updated = prev.map(c =>
+          c.conversationId === data.conversation_id
+            ? { ...c, lastMessage: data.content, time: 'just now' }
+            : c
+        );
+        const moved = updated.find(c => c.conversationId === data.conversation_id);
+        const rest = updated.filter(c => c.conversationId !== data.conversation_id);
+        return moved ? [moved, ...rest] : updated;
+      });
+    }
+  };
+
+  ws.onerror = (err) => console.error('WebSocket error:', err);
+  ws.onclose = () => console.log('WebSocket closed');
+
+  wsRef.current = ws;
+  return () => ws.close();
+}, [isLoggedIn]);
+
+ const handleSelectedContact = async (contact) => {
   setView('chat');
-  if(!conversations[contact.id]){
-    setConversations(prev=>({
-       ...prev,[contact.id]:[]
-    }));
-  }
-  }
-  
-  //called when user sends a message
-  const handleSendMessage=(text)=>{
-    if(!activeContact || !text.trim()) return;
-    const newMessage = {
-      id:Date.now(),
-      text:text.trim(),
-      fromMe:true,
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      status:'sent'
-    };
+
+  const token = localStorage.getItem('token');
+  const res = await fetch('http://localhost:8000/messages/conversations', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ username: contact.username })
+  });
+
+  const data = await res.json();
+
+  const contactWithConvId = { ...contact, conversationId: data.conversation_id };
+  setActiveContact(contactWithConvId);
+
+  if (!conversations[data.conversation_id]) {
     setConversations(prev => ({
       ...prev,
-      [activeContact.id]: [...(prev[activeContact.id] || []), newMessage],
+      [data.conversation_id]: []
     }));
-    setContacts(prev => {
-  const updated = prev.map(c =>
-    c.id === activeContact.id
-      ? { ...c, lastMessage: text.trim(), time: 'just now' }
-      : c
-  );
-  const moved = updated.find(c => c.id === activeContact.id);
-  const rest = updated.filter(c => c.id !== activeContact.id);
-  return [moved, ...rest];
-});
   }
-
+};
+  
+ const handleSendMessage = (text) => {
+  if (!activeContact || !text.trim()) return;
+  if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
+    alert('Connection lost. Please refresh.');
+    return;
+  }
+  wsRef.current.send(JSON.stringify({
+    type: 'message',
+    conversation_id: activeContact.conversationId,
+    content: text.trim()
+  }));
+};
   const handleAddContact = (contact)=>{
     const newEntry ={
       id:Date.now(),
@@ -146,7 +180,7 @@ const App = ()=>{
         <Chatarea view={view}
         setView={setView}
         activeContact={activeContact}
-        messages={activeContact ? (conversations[activeContact.id] || []) : []}
+        messages={activeContact ? (conversations[activeContact.conversationId] || []) : []}
         onSendMessage={handleSendMessage} />
       </main>
 

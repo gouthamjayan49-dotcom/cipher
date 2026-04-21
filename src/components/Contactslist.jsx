@@ -3,7 +3,7 @@ import React from 'react'
 const Contactslist=({contact, onClick})=>{
   const initials = contact.name.split(' ').map(n => n[0]).join('').toUpperCase();
     return(
-        <div className='flex flex-row items-center p-4 border-b cursor-pointer hover:opacity-80 transition-colors'
+        <div onClick={onClick} className='flex flex-row items-center p-4 border-b cursor-pointer hover:opacity-80 transition-colors'
         style={{borderColor:'var(--border-ui)', backgroundColor:'var(--bg-sidebar)'}}>
               {/* Profile icon div */}
               <div className='w-12 h-12 rounded-full shrink-0 flex items-center justify-center'

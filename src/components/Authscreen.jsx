@@ -7,10 +7,35 @@ const AuthScreen = ({ onLogin }) => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
-  const handleSubmit = () => {
-    // placeholder — will wire to backend later
-    onLogin();
-  };
+  const handleSubmit = async () => {
+  // 1. Check if we are in 'login' or 'signup' mode
+  const endpoint = mode === 'login' ? '/auth/login' : '/auth/register';
+  
+
+  try {
+    const response = await fetch(`http://localhost:8000${endpoint}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({username,password})
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      
+      // 3. SAVE THE TOKEN! This is what NewContact.jsx is looking for.
+      localStorage.setItem('token', data.access_token);
+      localStorage.setItem('username', username); // add this
+      
+      onLogin(); // Proceed to the main app
+    } else {
+      const errorData = await response.json();
+      alert(errorData.detail || "Authentication failed");
+    }
+  } catch (error) {
+    console.error("Connection error:", error);
+    alert("Could not connect to the CipherNet backend.");
+  }
+};
 
   return (
     <div className='relative w-screen h-screen flex flex-col items-center justify-center overflow-hidden'
