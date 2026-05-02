@@ -1,4 +1,4 @@
-import React,{useState} from 'react';
+import React,{useState,useEffect} from 'react';
 import {SquarePen,ArrowLeft,Search,UserPlus,User,Check,ChevronDown,Phone,LogOut,Pen} from 'lucide-react';
 import Chatlistitem from './Chatlistitem';
 import Contactslist from './Contactslist';
@@ -6,9 +6,40 @@ import NewContact from './NewContact';
 import { use } from 'react';
 
 const Sidebar = ({isSidebarOpen,sidebarView, setSidebarView,contacts,activeContact,onSelectContact,
-  onAddContact})=>{
+  onAddContact,currentUser})=>{
     const[about,setAbout]=useState('');
     const [editingUsername, setEditingUsername] = useState(false);
+
+    const handleSaveAbout = async () => {
+  await fetch('http://localhost:8000/auth/me', {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    credentials: 'include',
+    body: JSON.stringify({ about_user: about })
+  });
+  alert('Saved!');
+};
+    const handleLogout = async () => {
+  await fetch('http://localhost:8000/auth/logout', {
+    method: 'POST',
+    credentials: 'include'
+  });
+  window.location.reload();
+};
+
+useEffect(() => {
+  if (sidebarView !== 'profile') return;
+  fetch('http://localhost:8000/auth/me', {
+    credentials: 'include'
+  })
+  .then(res => res.json())
+  .then(data => {
+    setAbout(data.about_user || '');
+  });
+}, [sidebarView]);
+
     return(
         <aside
        className={`border-r transition-all duration-300 overflow-hidden flex flex-col
@@ -122,7 +153,7 @@ style={{
                 New Contact
             </h1>
         </header>
-        <NewContact onAddContact={onAddContact} contacts={contacts} />
+        <NewContact onAddContact={onAddContact} onSelectContact={onSelectContact} />
       </>
 )}
 
@@ -157,7 +188,7 @@ style={{
 
     {editingUsername 
       ? <input autoFocus className='outline-none bg-transparent text-sm' style={{ color: 'var(--text-primary)' }} />
-      : <p className='text-sm' style={{ color: 'var(--text-primary)' }}>@username</p>
+      : <p className='text-sm' style={{ color: 'var(--text-primary)' }}>@{currentUser}</p>
     }
     <Pen size={14} style={{ color: 'var(--text-secondary)' }} onClick={()=>setEditingUsername(true)} />
   </div>
@@ -176,13 +207,14 @@ style={{
       style={{ color: 'var(--text-primary)' }}
     />
     <Check size={16} className='cursor-pointer hover:opacity-70' 
-      style={{ color: 'var(--text-secondary)' }} />
+    onClick={handleSaveAbout}
+    style={{ color: 'var(--text-secondary)' }} />
   </div>
 </div>
 
           {/* Logout */}
           <div className='mt-auto'>
-            <button className='w-full flex items-center gap-3 p-4 rounded-2xl hover:opacity-70 transition-opacity'
+            <button onClick={handleLogout} className='w-full flex items-center gap-3 p-4 rounded-2xl hover:opacity-70 transition-opacity'
               style={{ color: '#FF3B30' }}>
               <LogOut size={18} />
               <span className='text-sm font-medium'>Log Out</span>

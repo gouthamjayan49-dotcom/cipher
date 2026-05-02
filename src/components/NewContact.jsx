@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Search, Check } from 'lucide-react';
 import Contactslist from './Contactslist';
 
-const NewContact = ({ onAddContact }) => {
+const NewContact = ({ onAddContact,onSelectContact }) => {
   const [username, setUsername] = useState('');
   const [suggestions, setSuggestions] = useState([]);
   const [selected, setSelected] = useState(null);
@@ -10,9 +10,8 @@ const NewContact = ({ onAddContact }) => {
   useEffect(() => {
     const searchUsers = async () => {
       if (username.length < 2) return setSuggestions([]);
-      const token = localStorage.getItem('token');
       const res = await fetch(`http://localhost:8000/contacts/search?username=${username}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+      credentials: 'include'
       });
       if (res.ok) {
         const data = await res.json();
@@ -24,37 +23,48 @@ const NewContact = ({ onAddContact }) => {
   }, [username]);
 
   const handleSave = async () => {
-    if (!selected) return;
-    const token = localStorage.getItem('token');
+  if (!selected) return;
 
-    // Add to contacts on backend
-    await fetch(`http://localhost:8000/contacts/?contact_username=${selected.username}`, {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
+  await fetch(`http://localhost:8000/contacts/?contact_username=${selected.username}`, {
+    method: 'POST',
+    credentials: 'include'
+  });
 
-    // Create or get conversation
-    const res = await fetch('http://localhost:8000/messages/conversations', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ username: selected.username })
-    });
-    const data = await res.json();
+  const res = await fetch('http://localhost:8000/messages/conversations', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    credentials: 'include',
+    body: JSON.stringify({ username: selected.username })
+  });
+  const data = await res.json();
 
-    onAddContact({
-      id: data.conversation_id,
-      conversationId: data.conversation_id,
-      name: selected.username,
-      username: selected.username,
-      about: selected.about_user || '',
-      lastMessage: '',
-      time: '',
-      unread: 0
-    });
-  };
+  onAddContact({
+    id: data.conversation_id,
+    conversationId: data.conversation_id,
+    name: selected.username,
+    username: selected.username,
+    about: selected.about_user || '',
+    lastMessage: '',
+    time: '',
+    unread: 0
+  });
+
+  const newContact = {
+  id: data.conversation_id,
+  conversationId: data.conversation_id,
+  name: selected.username,
+  username: selected.username,
+  about: selected.about_user || '',
+  lastMessage: '',
+  time: '',
+  unread: 0
+};
+
+onAddContact(newContact);
+onSelectContact(newContact);
+};
 
   return (
     <div className='flex flex-col h-full' style={{ backgroundColor: 'var(--bg-app)' }}>

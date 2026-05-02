@@ -3,12 +3,11 @@ import { Check, CheckCheck, User, Bot, Trash2 } from 'lucide-react';
 
 const Messagebubble=({message})=>{
 
-    const StatusIcon=()=>{
-        if(!message.fromMe) return null;
-        if(message.status==='read') return <CheckCheck size={12} className='text-blue-400' />;
-        if (message.status === 'delivered') return <CheckCheck size={12} />;
-        return <Check size={12} />;
-    };
+    const StatusIcon = () => {
+  if (!message.fromMe) return null;
+  if (message.status === 'read') return <CheckCheck size={12} style={{color:'#ffffff'}} />;
+  return <Check size={12} style={{color:'#ffffff', opacity:0.6}} />;
+};
 
     return(
         <>

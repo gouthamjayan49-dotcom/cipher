@@ -8,6 +8,15 @@ const AuthScreen = ({ onLogin }) => {
   const [confirmPassword, setConfirmPassword] = useState('');
 
   const handleSubmit = async () => {
+    if (mode === 'signup' && !confirmPassword.trim()) {
+    alert("Please confirm your password!");
+    return;
+  }
+  if (mode === 'signup' && password !== confirmPassword) {
+    alert("Passwords don't match!");
+    return;
+  }
+
   // 1. Check if we are in 'login' or 'signup' mode
   const endpoint = mode === 'login' ? '/auth/login' : '/auth/register';
   
@@ -16,17 +25,14 @@ const AuthScreen = ({ onLogin }) => {
     const response = await fetch(`http://localhost:8000${endpoint}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({username,password})
+      body: JSON.stringify({username,password}),
+      credentials: 'include'
     });
 
     if (response.ok) {
       const data = await response.json();
+      onLogin(data.username);
       
-      // 3. SAVE THE TOKEN! This is what NewContact.jsx is looking for.
-      localStorage.setItem('token', data.access_token);
-      localStorage.setItem('username', username); // add this
-      
-      onLogin(); // Proceed to the main app
     } else {
       const errorData = await response.json();
       alert(errorData.detail || "Authentication failed");
