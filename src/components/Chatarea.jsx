@@ -4,8 +4,9 @@ import Contactprofile from './Contactprofile';
 import NewContact from './NewContact';
 import { Send, Smile, Paperclip,ArrowLeft,User,Phone,Check } from 'lucide-react';
 
-const Chatarea = ({ view, setView, activeContact, messages, onSendMessage, }) => {
+const Chatarea = ({ view, setView, activeContact, messages, onSendMessage, onUpdateContactName }) => {
     const[inputText,setInputText]=useState('');
+    const [nickname, setNickname] = useState('');
     const handleSend=()=>{
         onSendMessage(inputText);
         setInputText('');
@@ -19,6 +20,18 @@ const handleKeyDown = (e) => {
     useEffect(()=>{
         bottomRef.current?.scrollIntoView({behavior:'smooth'});
     },[messages])
+
+const handleSaveNickname = async () => {
+  console.log('save nickname clicked', nickname, activeContact?.username);
+  if (!nickname.trim()) return;
+  await fetch(`http://localhost:8000/contacts/nickname/${activeContact.username}?nickname=${encodeURIComponent(nickname.trim())}`, {
+    method: 'PATCH',
+    credentials: 'include'
+  });
+  alert('Nickname saved!');
+  onUpdateContactName(activeContact.username, nickname.trim());
+};
+
     return (
         <>
         {view === 'chat' &&(
@@ -86,7 +99,7 @@ const handleKeyDown = (e) => {
       style={{ borderColor: 'var(--border-ui)' }}>
       <p className='text-xs font-medium' style={{ color: 'var(--text-secondary)' }}>Username</p>
       <p className='text-sm' style={{ color: 'var(--text-primary)' }}>
-        {activeContact?.name}
+        {activeContact?.username}
       </p>
     </div>
 
@@ -97,6 +110,8 @@ const handleKeyDown = (e) => {
       <input
         type="text"
         placeholder="Add a nickname..."
+        value={nickname}
+        onChange={e => setNickname(e.target.value)}
         className="outline-none bg-transparent w-full text-sm"
         style={{ color: 'var(--text-primary)' }}
       />
@@ -105,6 +120,7 @@ const handleKeyDown = (e) => {
     {/* Save Button */}
     <div className="flex justify-end">
       <button
+        onClick={handleSaveNickname}
         className="p-3 rounded-full transition-opacity hover:opacity-70"
         style={{ backgroundColor: 'var(--bg-item-hover)' }}>
         <Check size={22} style={{ color: 'var(--text-primary)' }} />
